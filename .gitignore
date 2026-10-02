@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# 运行时数据
+data/*.db
+data/_*.json
+*.sqlite3
+
+# 前端
+node_modules/
+frontend/dist/
+
+# 环境与临时
+.env.local
+tmp/
+*.log
+
+# 大型离线包
+*.tar
+instantclient/
+.mimosa/
+
+# 嵌套工作树（2026-09-12 并行开发产物，勿入库）
+GPOST/
+
+# 工具工作目录（2026-09-25，勿入库）
+.v2c/
+.video_agent/
+.tmp_ui/
+.zcode/
+
+# 发布卫生（2026-10-01）：环境配置与本地数据一律不入库
+.env
+data/*.db
+data/_*.json
+data/test_body.json
+data/oracle_materials.html

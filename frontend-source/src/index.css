@@ -1,0 +1,435 @@
+/* ============================================================
+   APIBridge - Notion Style Design System
+   Inter font, clean whites, subtle borders, card-based layout
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ============================================================
+   Design Tokens (Notion-inspired)
+   ============================================================ */
+:root {
+  --nb-bg: #FFFFFF;
+  --nb-sidebar: #FBFBFA;
+  --nb-text: #37352F;
+  --nb-text-secondary: #9B9A97;
+  --nb-text-muted: #B4B2AD;
+  --nb-primary: #2383E2;
+  --nb-primary-hover: #1A6CC7;
+  --nb-primary-light: rgba(35, 131, 226, 0.08);
+  --nb-border: #E9E9E7;
+  --nb-border-hover: #D3D3D0;
+  --nb-hover: #F1F0EF;
+  --nb-card: #FFFFFF;
+  --nb-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --nb-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --nb-success: #0F7B4B;
+  --nb-success-bg: rgba(15, 123, 75, 0.08);
+  --nb-warning: #D9730D;
+  --nb-warning-bg: rgba(217, 115, 13, 0.08);
+  --nb-danger: #E03E3E;
+  --nb-danger-bg: rgba(224, 62, 62, 0.08);
+  --nb-radius: 6px;
+  --nb-radius-lg: 8px;
+  --nb-transition: 150ms ease;
+  --font-notion: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-notion);
+  font-size: 14px;
+  color: var(--nb-text);
+  background: var(--nb-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Scrollbar (Notion thin style)
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--nb-border-hover);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nb-text-muted);
+}
+
+/* ============================================================
+   Ant Design Overrides - Buttons
+   ============================================================ */
+.ant-btn {
+  border-radius: var(--nb-radius) !important;
+  font-family: var(--font-notion) !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  height: 32px !important;
+  padding: 4px 14px !important;
+  box-shadow: none !important;
+  transition: background var(--nb-transition), border-color var(--nb-transition) !important;
+}
+
+.ant-btn-primary {
+  background: var(--nb-primary) !important;
+  border-color: var(--nb-primary) !important;
+}
+.ant-btn-primary:hover {
+  background: var(--nb-primary-hover) !important;
+  border-color: var(--nb-primary-hover) !important;
+}
+
+.ant-btn-default {
+  border-color: var(--nb-border) !important;
+  color: var(--nb-text) !important;
+  background: var(--nb-bg) !important;
+}
+.ant-btn-default:hover {
+  border-color: var(--nb-border-hover) !important;
+  background: var(--nb-hover) !important;
+  color: var(--nb-text) !important;
+}
+
+.ant-btn-dangerous {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--nb-danger) !important;
+}
+.ant-btn-dangerous:hover {
+  background: var(--nb-danger-bg) !important;
+}
+
+.ant-btn-text {
+  color: var(--nb-text) !important;
+}
+.ant-btn-text:hover {
+  background: var(--nb-hover) !important;
+}
+
+.ant-btn-sm {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 10px !important;
+}
+
+/* ============================================================
+   Ant Design Overrides - Cards
+   ============================================================ */
+.ant-card {
+  border-radius: var(--nb-radius-lg) !important;
+  border: 1px solid var(--nb-border) !important;
+  box-shadow: var(--nb-shadow) !important;
+  font-family: var(--font-notion) !important;
+}
+.ant-card-bordered {
+  border: 1px solid var(--nb-border) !important;
+}
+.ant-card-head {
+  border-bottom: 1px solid var(--nb-border) !important;
+  padding: 12px 20px !important;
+  min-height: auto !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  color: var(--nb-text) !important;
+}
+.ant-card-body {
+  padding: 20px !important;
+}
+
+/* ============================================================
+   Ant Design Overrides - Table
+   ============================================================ */
+.ant-table {
+  font-family: var(--font-notion) !important;
+  font-size: 13px !important;
+}
+.ant-table-thead > tr > th {
+  background: var(--nb-sidebar) !important;
+  color: var(--nb-text-secondary) !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  border-bottom: 1px solid var(--nb-border) !important;
+  padding: 8px 16px !important;
+}
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--nb-border) !important;
+  padding: 10px 16px !important;
+  color: var(--nb-text) !important;
+}
+.ant-table-tbody > tr:hover > td {
+  background: var(--nb-hover) !important;
+}
+.ant-table-tbody > tr.ant-table-row-selected > td {
+  background: var(--nb-primary-light) !important;
+}
+
+/* ============================================================
+   Ant Design Overrides - Tabs
+   ============================================================ */
+.ant-tabs {
+  font-family: var(--font-notion) !important;
+}
+.ant-tabs-tab {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--nb-text-secondary) !important;
+  padding: 8px 0 !important;
+}
+.ant-tabs-tab:hover {
+  color: var(--nb-text) !important;
+}
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--nb-text) !important;
+  font-weight: 600 !important;
+}
+.ant-tabs-ink-bar {
+  background: var(--nb-text) !important;
+  height: 2px !important;
+}
+.ant-tabs-nav {
+  margin-bottom: 24px !important;
+}
+.ant-tabs-nav::before {
+  border-bottom-color: var(--nb-border) !important;
+}
+
+/* ============================================================
+   Ant Design Overrides - Form
+   ============================================================ */
+.ant-form {
+  font-family: var(--font-notion) !important;
+}
+.ant-form-item-label > label {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--nb-text-secondary) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+.ant-input, .ant-input-number, .ant-picker, .ant-select-selector {
+  border-radius: var(--nb-radius) !important;
+  border-color: var(--nb-border) !important;
+  font-family: var(--font-notion) !important;
+  font-size: 13px !important;
+  box-shadow: none !important;
+  transition: border-color var(--nb-transition) !important;
+}
+.ant-input:hover, .ant-input-number:hover, .ant-picker:hover, .ant-select-selector:hover {
+  border-color: var(--nb-border-hover) !important;
+}
+.ant-input:focus, .ant-input-focused,
+.ant-input-number-focused, .ant-picker-focused {
+  border-color: var(--nb-primary) !important;
+  box-shadow: 0 0 0 2px var(--nb-primary-light) !important;
+}
+.ant-select-focused .ant-select-selector {
+  border-color: var(--nb-primary) !important;
+  box-shadow: 0 0 0 2px var(--nb-primary-light) !important;
+}
+
+/* ============================================================
+   Ant Design Overrides - Modal
+   ============================================================ */
+.ant-modal-content {
+  border-radius: var(--nb-radius-lg) !important;
+  box-shadow: var(--nb-shadow-md) !important;
+}
+.ant-modal-header {
+  border-bottom: 1px solid var(--nb-border) !important;
+  padding: 20px 24px !important;
+}
+.ant-modal-title {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: var(--nb-text) !important;
+}
+.ant-modal-close {
+  color: var(--nb-text-secondary) !important;
+}
+.ant-modal-footer {
+  border-top: 1px solid var(--nb-border) !important;
+  padding: 12px 24px !important;
+}
+
+/* ============================================================
+   Ant Design Overrides - Tags & Badges
+   ============================================================ */
+.ant-tag {
+  font-family: var(--font-notion) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border-radius: 4px !important;
+  border: none !important;
+  padding: 1px 8px !important;
+  line-height: 20px !important;
+}
+
+/* ============================================================
+   Ant Design Overrides - Menu (Sidebar)
+   ============================================================ */
+.ant-menu-dark, .ant-menu-dark .ant-menu-sub {
+  background: var(--nb-sidebar) !important;
+}
+.ant-menu-dark .ant-menu-item {
+  color: var(--nb-text-secondary) !important;
+  border-radius: var(--nb-radius) !important;
+  margin: 2px 8px !important;
+  width: auto !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: background var(--nb-transition) !important;
+}
+.ant-menu-dark .ant-menu-item:hover {
+  background: var(--nb-hover) !important;
+  color: var(--nb-text) !important;
+}
+.ant-menu-dark .ant-menu-item-selected {
+  background: var(--nb-primary-light) !important;
+  color: var(--nb-primary) !important;
+}
+.ant-menu-dark.ant-menu-inline .ant-menu-item::after {
+  display: none !important;
+}
+.ant-menu-dark .ant-menu-item .anticon {
+  font-size: 16px !important;
+  opacity: 0.7 !important;
+}
+.ant-menu-dark .ant-menu-item-selected .anticon {
+  opacity: 1 !important;
+}
+
+/* ============================================================
+   Ant Design Overrides - Statistic
+   ============================================================ */
+.ant-statistic-title {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: var(--nb-text-secondary) !important;
+}
+.ant-statistic-content {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  color: var(--nb-text) !important;
+  font-family: var(--font-notion) !important;
+}
+
+/* ============================================================
+   Notion-style Page Headings
+   ============================================================ */
+.page-heading {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--nb-text);
+  margin-bottom: 20px;
+  letter-spacing: -0.3px;
+}
+.section-heading {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nb-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+}
+
+/* ============================================================
+   Notion-style Status Pills
+   ============================================================ */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+}
+.status-pill--success {
+  background: var(--nb-success-bg);
+  color: var(--nb-success);
+}
+.status-pill--warning {
+  background: var(--nb-warning-bg);
+  color: var(--nb-warning);
+}
+.status-pill--danger {
+  background: var(--nb-danger-bg);
+  color: var(--nb-danger);
+}
+
+/* ============================================================
+   Notion-style Metric Card
+   ============================================================ */
+.metric-card {
+  padding: 18px 20px;
+  border: 1px solid var(--nb-border);
+  border-radius: var(--nb-radius-lg);
+  background: var(--nb-card);
+  box-shadow: var(--nb-shadow);
+}
+.metric-card__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--nb-text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.metric-card__value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--nb-text);
+  letter-spacing: -0.5px;
+}
+.metric-card__suffix {
+  font-size: 13px;
+  color: var(--nb-text-secondary);
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+.nb-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--nb-text-secondary);
+  font-size: 13px;
+}
+.nb-empty-state__icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+.nb-empty-state__text {
+  margin-bottom: 4px;
+}
+.nb-empty-state__hint {
+  font-size: 12px;
+  color: var(--nb-text-muted);
+}
+
+/* Scoped additions for monitoring rows and the collapsible navigation. */
+.row-has-failure > td { background: var(--nb-danger-bg) !important; }
+.nb-sider .ant-layout-sider-trigger { background: var(--nb-sidebar); color: var(--nb-text-muted); }

@@ -1,0 +1,11 @@
+# 需要忽略的 docker 构建上下文
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+env/
+frontend/node_modules/
+frontend/dist/
+.git/
+.pytest_cache/
+*.egg-info/

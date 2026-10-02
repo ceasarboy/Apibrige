@@ -1,0 +1,232 @@
+/* BI 大屏装饰样式（自研，零外部依赖 —— task 5.2）
+   深色底 + 发光边框 + 翻牌数字，适配作战室/车间大屏投放。 */
+
+.scr-root {
+  --scr-bg: #061426;
+  --scr-panel-bg: linear-gradient(180deg, rgba(16, 42, 72, 0.94), rgba(8, 24, 44, 0.94));
+  --scr-line: rgba(64, 158, 255, 0.35);
+  --scr-glow: rgba(64, 158, 255, 0.18);
+  --scr-text: #d6e8ff;
+  --scr-text-dim: #7fa6cc;
+  --scr-accent: #2fc1ff;
+  --scr-success: #27d17c;
+  --scr-warning: #ffb020;
+  --scr-danger: #ff5c5c;
+
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(47, 193, 255, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(64, 158, 255, 0.08), transparent 55%),
+    var(--scr-bg);
+  color: var(--scr-text);
+  min-height: 100vh;
+}
+
+/* ---------- 面板 ---------- */
+.scr-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--scr-panel-bg);
+  border: 1px solid var(--scr-line);
+  border-radius: 6px;
+  box-shadow: 0 0 14px var(--scr-glow), inset 0 0 22px rgba(64, 158, 255, 0.06);
+  overflow: hidden;
+}
+
+.scr-panel::before,
+.scr-panel::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--scr-accent);
+  opacity: 0.85;
+}
+
+.scr-panel::before {
+  top: 4px;
+  left: 4px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+
+.scr-panel::after {
+  right: 4px;
+  bottom: 4px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+}
+
+.scr-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 14px;
+  border-bottom: 1px solid rgba(64, 158, 255, 0.18);
+  background: linear-gradient(90deg, rgba(47, 193, 255, 0.12), transparent);
+}
+
+.scr-panel__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.scr-panel__extra {
+  font-size: 12px;
+  color: var(--scr-text-dim);
+}
+
+.scr-panel__body {
+  flex: 1;
+  min-height: 0;
+  padding: 6px 10px 8px;
+}
+
+/* ---------- 指标卡（数字翻牌；紧凑布局适配矮卡） ---------- */
+.scr-card {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(16, 42, 72, 0.94), rgba(8, 24, 44, 0.94));
+  border: 1px solid var(--scr-line);
+  box-shadow: 0 0 14px var(--scr-glow), inset 0 0 22px rgba(64, 158, 255, 0.06);
+}
+
+.scr-card__label {
+  font-size: 12px;
+  color: var(--scr-text-dim);
+  margin-bottom: 2px;
+  letter-spacing: 0.5px;
+}
+
+.scr-card__value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.scr-card__num {
+  font-family: 'DIN Alternate', 'Bahnschrift', 'Segoe UI', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--scr-accent);
+  text-shadow: 0 0 12px rgba(47, 193, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.scr-card__unit {
+  font-size: 13px;
+  color: var(--scr-text-dim);
+}
+
+.scr-card__hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--scr-text-dim);
+}
+
+.scr-card--success .scr-card__num { color: var(--scr-success); text-shadow: 0 0 12px rgba(39, 209, 124, 0.45); }
+.scr-card--warning .scr-card__num { color: var(--scr-warning); text-shadow: 0 0 12px rgba(255, 176, 32, 0.45); }
+.scr-card--danger  .scr-card__num { color: var(--scr-danger);  text-shadow: 0 0 12px rgba(255, 92, 92, 0.45); }
+
+/* ---------- 深色简易表格（大屏投放用） ---------- */
+.scr-table {
+  font-size: 12px;
+}
+
+.scr-table__head,
+.scr-table__row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 5px 8px;
+}
+
+.scr-table__head {
+  position: sticky;   /* 表头吸顶，滚动时保持可见 */
+  top: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, #0c1f38, #0a1b30);
+  color: var(--scr-text-dim);
+  border-bottom: 1px solid rgba(64, 158, 255, 0.25);
+  font-weight: 600;
+}
+
+.scr-table__row {
+  border-bottom: 1px dashed rgba(64, 158, 255, 0.12);
+}
+
+.scr-table__row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 投放模式工具条 ---------- */
+.scr-bar {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+  opacity: 0.7;
+  transition: opacity 150ms ease;
+}
+
+.scr-bar:hover,
+.scr-bar:focus-within {
+  opacity: 1;
+}
+
+.scr-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--scr-accent), transparent);
+  opacity: 0.7;
+}
+
+/* ---------- 白底主题（明亮环境/打印；变量覆写，组件零改动） ---------- */
+.scr-root--light {
+  --scr-bg: #f2f4f8;
+  --scr-panel-bg: #ffffff;
+  --scr-line: #d9dee8;
+  --scr-glow: rgba(35, 131, 226, 0.08);
+  --scr-text: #24324a;
+  --scr-text-dim: #6b7a93;
+  --scr-accent: #2383e2;
+
+  background: var(--scr-bg);
+  color: var(--scr-text);
+}
+
+.scr-root--light .scr-panel {
+  box-shadow: 0 1px 4px rgba(30, 50, 90, 0.10);
+}
+
+.scr-root--light .scr-panel__title {
+  color: #24324a;
+}
+
+.scr-root--light .scr-card {
+  background: #ffffff;
+  border: 1px solid var(--scr-line);
+  box-shadow: 0 1px 4px rgba(30, 50, 90, 0.10);
+}
+
+.scr-root--light .scr-card__num {
+  text-shadow: none;
+}

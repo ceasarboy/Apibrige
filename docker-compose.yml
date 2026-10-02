@@ -1,0 +1,136 @@
+version: "3.8"
+
+services:
+  # ===== 数据库 =====
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: apibridge
+      POSTGRES_USER: apibridge
+      POSTGRES_PASSWORD: apibridge123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apibridge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== Redis 缓存 =====
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ===== RabbitMQ 消息队列 =====
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: apibridge
+      RABBITMQ_DEFAULT_PASS: apibridge123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== 后端 API 服务 =====
+  backend:
+    build: .
+    environment:
+      # 环境变量必须带 APIBRIDGE_ 前缀（config.py env_prefix）
+      APIBRIDGE_DATABASE_URL: postgresql+asyncpg://apibridge:apibridge123@postgres:5432/apibridge
+      APIBRIDGE_REDIS_URL: redis://redis:6379/0
+      APIBRIDGE_RABBITMQ_URL: amqp://apibridge:apibridge123@rabbitmq:5672/
+      APIBRIDGE_ENCRYPT_KEY: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  # ===== Celery Worker =====
+  worker:
+    build: .
+    command: celery -A app.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      # 环境变量必须带 APIBRIDGE_ 前缀（config.py env_prefix）
+      APIBRIDGE_DATABASE_URL: postgresql+asyncpg://apibridge:apibridge123@postgres:5432/apibridge
+      APIBRIDGE_REDIS_URL: redis://redis:6379/0
+      APIBRIDGE_RABBITMQ_URL: amqp://apibridge:apibridge123@rabbitmq:5672/
+      APIBRIDGE_ENCRYPT_KEY: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ===== 前端 Web 服务 =====
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ===== Prometheus 监控 =====
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: apibridge-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./configs/alerts.yml:/etc/prometheus/alerts.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ===== Grafana 监控面板 =====
+  grafana:
+    image: grafana/grafana:latest
+    container_name: apibridge-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: apibridge123
+      GF_INSTALL_PLUGINS: ""
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./configs/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/apibridge.json
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

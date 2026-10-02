@@ -1,0 +1,31 @@
+# APIBridge 依赖
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+sqlalchemy[asyncio]>=2.0.25
+asyncpg>=0.29.0
+redis[hiredis]>=5.0.0
+aio-pika>=9.4.0
+celery>=5.3.6
+httpx>=0.27.0
+pydantic>=2.6.0
+pydantic-settings>=2.1.0
+# 数据库连接器
+aiomysql>=0.2.0
+aiosqlite>=0.20.0
+# Oracle：thin 模式连 12.1+；目标系统 11g 需 thick 模式 + Instant Client 19（21+ 不支持 11g 服务端）
+oracledb>=2.1.0,<5
+# 协议适配器
+zeep>=4.2.0          # SOAP
+websockets>=12.0     # WebSocket
+grpcio>=1.62.0       # gRPC
+grpcio-tools>=1.62.0 # gRPC 运行时 proto 编译
+protobuf>=4.25.0     # gRPC 消息序列化
+# 定时调度（cron 表达式解析）
+croniter>=2.0.0
+# 加密
+cryptography>=42.0.0 # Fernet 加密（认证管理）
+# 监控
+prometheus-client>=0.19.0
+# 测试
+pytest>=8.0.0
+pytest-asyncio>=0.23.0

@@ -1,0 +1,67 @@
+# Prometheus 告警规则
+groups:
+  - name: apibridge
+    interval: 30s
+    rules:
+      # 服务存活
+      - alert: APIBridgeDown
+        expr: up{job="apibridge"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "APIBridge 服务不可用"
+          description: "APIBridge 服务已宕机超过 1 分钟"
+
+      # 同步成功率过低
+      - alert: SyncSuccessRateLow
+        expr: rate(apibridge_sync_total{status="success"}[5m]) / rate(apibridge_sync_total[5m]) < 0.95
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "同步成功率低于 95%"
+          description: "最近 5 分钟同步成功率 {{ $value | humanizePercentage }}"
+
+      # 同步延迟过高
+      - alert: SyncLatencyHigh
+        expr: histogram_quantile(0.95, rate(apibridge_sync_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 同步延迟超过 5 秒"
+          description: "P95 同步延迟 {{ $value }}s"
+
+      # 数据缓冲积压
+      # 口径：度量 data_buffer 中 pending/processing 的行数（跨环境可靠）。
+      # 不用 apibridge_queue_depth：它在 MQ 不可达时**故意不导出**（design D2，
+      # 宁可 no data 也不谎报 0），不能作为告警源。
+      - alert: QueueDepthHigh
+        expr: apibridge_buffer_pending > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "数据缓冲积压超过 1000 行"
+          description: "当前待处理（pending/processing）行数 {{ $value }}"
+
+      # CPU 使用率过高
+      - alert: CPUUsageHigh
+        expr: rate(process_cpu_seconds_total{job="apibridge"}[1m]) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU 使用率超过 85%"
+          description: "CPU 使用率 {{ $value }}%"
+
+      # 内存使用过高
+      - alert: MemoryUsageHigh
+        expr: process_resident_memory_bytes{job="apibridge"} / 1024 / 1024 > 1024
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "内存使用超过 1GB"
+          description: "当前内存 {{ $value }}MB"

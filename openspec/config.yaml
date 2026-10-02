@@ -1,0 +1,47 @@
+schema: spec-driven
+
+context: |
+  项目: APIBridge - API数据桥接平台
+  目标: 通过中间数据库实现两个软件平台间的数据可靠传输
+  核心差异: 区别于Apifox(单API调试)，本项目专注双API数据桥接
+
+  技术栈:
+    后端: Python + FastAPI (异步)
+    中间数据库: PostgreSQL (持久化) + Redis (热缓存)
+    消息队列: RabbitMQ (异步任务)
+    任务调度: Celery + Beat
+    数据库连接器: aiomysql/oracledb/aiosqlite/asyncpg
+    前端: React + Ant Design
+    部署: Docker (内网离线部署)
+
+  支持的同步模式:
+    - API → API (REST/GraphQL/gRPC)
+    - DB → API (MySQL/Oracle/SQLite/PostgreSQL)
+    - API → DB
+    - DB → DB
+
+  关键决策:
+    - 存储策略: 混合模式 (Redis缓存 + PostgreSQL持久化)
+    - 传输模式: 混合模式 (按任务配置同步/异步)
+
+  约定:
+    - 中文文档和注释
+    - 遵循 CLAUDE.md 准则 (简单优先、外科手术式修改、目标驱动)
+    - 内网部署，无外网依赖
+
+rules:
+  proposal:
+    - 提案需明确技术选型的权衡分析
+    - 必须包含"非目标"章节
+  tasks:
+    - 任务粒度控制在可独立验证的单元
+    - 每个任务需标注验证方式
+
+operations:
+  apply:
+    guidance:
+      - 遵循 CLAUDE.md 的"外科手术式修改"原则
+      - 实现前先写测试用例
+  archive:
+    guidance:
+      - 归档前确认所有任务验证通过

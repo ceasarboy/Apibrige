@@ -1,0 +1,41 @@
+# Prometheus 监控配置
+# 采集 APIBridge 服务指标（内网部署，无需外部网络）
+
+global:
+  scrape_interval: 15s     # 采集间隔
+  evaluation_interval: 15s # 告警评估间隔
+
+# 告警管理
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+      # 未部署 AlertManager 时注释掉
+
+# 告警规则文件
+rule_files:
+  - "alerts.yml"
+
+# 采集目标
+scrape_configs:
+  # APIBridge 服务
+  - job_name: "apibridge"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets:
+          # 主机名必须与 docker-compose.yml 中的服务名一致
+          # （曾写成 apibridge-server，compose 里并不存在该服务 → 永远抓不到）
+          - "backend:8000"
+        labels:
+          service: "apibridge"
+          environment: "production"
+
+  # Redis 监控（需 Redis 导出器）
+  # - job_name: "redis"
+  #   static_configs:
+  #     - targets: ["redis-exporter:9121"]
+
+  # PostgreSQL 监控（需 PG 导出器）
+  # - job_name: "postgresql"
+  #   static_configs:
+  #     - targets: ["postgres-exporter:9187"]
