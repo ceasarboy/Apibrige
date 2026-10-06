@@ -1,86 +1,132 @@
-# APIBridge Windows 便携包
+# APIBridge
 
-适用于 Windows 10/11 x64，建议 4GB 以上可用内存、2GB 以上磁盘空间。
-包内含独立 Python 3.12、后端源码及依赖、编译前端、Redis Windows 和 Oracle Instant Client 19。
-无需安装 Python、Node.js、Docker 或本地 Oracle 数据库服务端。解压与运行可离线完成；连接远程业务系统需要网络。
+**APIBridge 是一个数据交换平台**：让源系统与目标系统之间的业务数据**持续同步**——新增、变更、删除都会被捕获并落到目标端，而不是一次性的 API 调试或数据搬运脚本。
 
-## 首次使用
+它解决三个问题：
 
-1. 将整个 ZIP 解压到可写的英文目录，例如 `D:\APIBridge`，不要直接在压缩包内运行。Oracle 19 客户端不支持本次测试中的中文路径；路径可含空格，请勿放在带中文用户名的桌面目录。
-2. 如果电脑没有 Microsoft Visual C++ 2015–2022/新版 x64 运行库，运行 `prerequisites\VC_redist.x64.exe` 安装。
-3. 在 CMD 中进入解压目录，执行 `start.cmd`。子服务后台运行，日志保存在 `logs`。
-4. 打开 http://127.0.0.1:3000 。用记事本打开解压目录里的 `.env`，复制 `APIBRIDGE_ADMIN_TOKEN=` 后的值，在页面右上角 Token 中保存。
-5. 通过连接管理配置自己的源和目标。执行任务前确认目标表、主键和删除同步开关。
+1. **连得上**——统一管理 API 与数据库两端的连接，凭据加密存储，探针先验证再建桥；
+2. **转得对**——字段映射 + 字段字典 + 逐条转换，L1/L2/L3 三级验证语义不谎报（L2 不写目标，L3 需人工授权写 1 条真实数据回读比对）；
+3. **持续对齐**——全量、增量（水位线）、删除对账三种模式，配 Cron 调度与 Webhook 触发，源变了目标就跟着变。
 
-`stop.cmd` 停止本包启动的 API 和 Redis；`status.cmd` 查看状态。停止不会删除数据库或密钥。
-强制关闭电脑前建议先执行 `stop.cmd`。API 停止会中断正在运行的同步，请等待任务结束后停止。
+在同步能力之上，内置一套 **BI 大屏与分析**：连接里的表单数据可以直接变成指标卡片、图表看板与对外投放页，不需要再导出数据到第三方 BI。
 
-## 数据和配置
+---
 
-- 首次启动自动生成随机管理令牌、加密密钥、Redis 密码和全新的 `data\apibridge.db`。
-- 本包不包含打包电脑的 `.env`、SQLite 数据库、连接账号、映射、任务、探针样本和日志。
-- 数据备份：停止服务后备份 `.env`、`launcher.json` 和整个 `data` 目录。恢复时必须同时保留原加密密钥。
-- 配置只读取本目录 `.env`，避免被目标电脑已有的 APIBRIDGE 环境变量覆盖。
-- 默认仅本机访问；Web 端口是 3000，Redis 是 16379。端口冲突时停止服务，修改 `launcher.json`；改 Redis 端口时还要同步修改 `.env` 的 `APIBRIDGE_REDIS_URL`。
-- 不要把已运行、已填入真实配置的目录当作干净安装包转发。
+## 功能总览
 
-## Oracle 远程连接
+### 数据同步核心
 
-默认开启 thick 模式，客户端路径相对本目录解析，兼容 Oracle 11g。
-连接远程数据库无需安装本地 Oracle 服务端。在页面配置远程 IP、端口、SID 或支持的服务名配置及账号。
-若只连接 Oracle 12.1+，可以将 `.env` 的 `APIBRIDGE_ORACLE_CLIENT_MODE` 改为 `thin`。
-探针访问内网地址还需要在 `.env` 的 `APIBRIDGE_PROBE_ALLOWED_HOSTS` 中添加管理员允许的主机，逗号分隔，重启生效。
+- **连接管理**：API（REST / SOAP / GraphQL / WebSocket / gRPC / Dubbo / 明道云）与数据库（Oracle / MySQL / PostgreSQL / SQLite）统一管理；认证方式（api_key / bearer / basic / oauth2 / 签名 / 自定义 Header）凭据 `enc:` 加密存储、对外输出统一脱敏。
+- **字段映射与字段字典**：双栏字段选择、类型兼容校验；字段字典控制 readable / writable 与显示名，同步时按字典过滤。
+- **同步任务**：
+  - 全量（sync，进程内执行）、增量（水位线三重校验 + 轮次 / 租约 / 断点重试）、**删除对账**（按业务键差集清理目标端多余行，含"完整源集合"守卫与空键防护）；
+  - Cron 调度（进程内，单 worker 互斥锁）、Webhook 触发（强制 secret）、失败转异步、冲突策略（跳过 / 覆盖）、幂等短路；
+  - 明道云（HAP）专用：批量 upsert 计划机（租约 + 幂等重放）、增量拉取（`utime` 水位 + 服务端过滤 + 定期全量对账）。
+- **执行日志与失败下钻**：逐条请求 / 响应 / 错误详情，失败行与字段级原因可导出。
 
-## 当前版本（2026-09-30：合并 GPOST 开发线）
+### 建桥流程（探针 → 待确认清单）
 
-本包**已与开发线（GPOST）合并**：在本文发行包基线之上移植了 BI 大演进 P1–P6，并修复合并中暴露的若干问题。合并的完整过程、逐文件冲突解决、验证结果与上线差异见 **`MERGE-REPORT.md`**。
+平台内**唯一**的建桥通路是「提议 → 校验 → 人工批准」：
 
-新增能力（开发线移植）：
+1. 联调探针 CLI 或管理页发起探针会话：**L1** 连通性 / **L2** 转换正确性（不写目标）/ **L3** 端到端（需人工授权，写 1 条真实数据回读比对）；
+2. Schema 推断与映射草稿生成（无模型时退化为同名 + 类型兼容）；
+3. 提交至**待确认清单**，由人在管理界面批准后一次性创建 连接 + 映射 + 任务（单事务）。
 
-- **明细大表逐行分析**：卡片分页/排序/搜索，DB 源分页下推不拉全量；列显示别名。
-- **计算字段与展示修饰**：行级派生列、聚合比、维度分组、占比/累计。
-- **即席分析工作台**（`/bi/analysis`）：字段树 + 拖拽槽 + 即时出图 + 另存卡片。
-- **聚合下推**：DB 源大表按维度下推聚合（`app/connectors/grouped_pushdown.py` 单一执行点，能力标志可关）。
-- **HAP 源增量拉取**：`utime` 水位线 + 两段式增量 + 定期全量对账（阈值与关闭开关见 `docs/bi-dashboard-guide.md`）。
-- **看板数据权限**（`/bi/access`）：只读访问令牌（`X-BI-Token`）+ 看板级可见性 / 行过滤 / 列隐藏，令牌只存哈希。
-- 后端与前端工具链：本包内自带测试（`tests/`，1012 项）、规格基线（`openspec/`）、开发文档（`docs/`）与运维脚本（`scripts/`）。
+AI agent 与探针**不可直接创建**桥接；API 目标无契约的结果标记 `L2_partial_no_contract`，不算达标、不得进清单。
 
-**上线前请阅读 `MERGE-REPORT.md` §8**：webhook secret 默认强制、BI 端点启用门禁、CORS 默认值收紧、表单读取超上限改为拒绝等行为差异。
+### BI 大屏与分析
 
-## 当前发行基线（2026-09-29）
+- **指标定义**：按维度 / 度量 / 过滤 / 计算字段（行级表达式引擎）/ 聚合比 / 维度分组 / TopN 配置业务指标，类型感知校验；数据源支持连接表单、执行日志、数据缓冲与只读自定义 SQL。
+- **聚合引擎**：时间桶预聚合（水位线增量推进 + 并发安全）；DB 源大表自动**聚合下推**（百万行毫秒级返回，单一 SQL 执行点、标识符白名单 + 全值绑定，可全局关闭）；HAP 源增量拉取。
+- **看板**：72×36 自由画布、任意位置任意大小、多看板、布局编辑、筛选维度下发。
+- **图表**：18 种标准图（折线 / 柱 / 饼 / 散点 / 雷达 / 桑基 / 关系 / 树 / 漏斗 / 仪表盘 / 热力 / 词云 / 排行 / 3D 矩阵等）+ KPI 卡。
+- **投放模式**：大屏对外投放（视口适配四模式、深浅主题、明细表自动轮播），支持**只读访问授权**——只读令牌（哈希存储）+ 看板白名单 + 行过滤 + 列隐藏，服务端强制。
+- **分析工作台**（`/bi/analysis`）：字段树 + 拖拽即席查询、即时出图、另存为看板卡片。
+- **监控看板**：任务 / 连接健康度、延迟分位、失败原因归一化 Top N（Prometheus `/metrics` 与 Grafana 示例配置齐备）。
 
-发行包自身基线基于提交 d10f2ec，包含 BI 大屏、监控增强及探针无时区时间按 UTC+08:00 解析的修复。同步能力包括：明道云批量 upsert、批次源数据刷新、手动增量水位、失败行和字段详情，以及长时间同步请求的等待修正。功能说明分别见 hap-bulk-upsert.md、manual-watermark.md、execution-log-rules.md 和 incremental-sync.md。
+### 安全
 
-## 执行模式
+- 凭证（auth_config 全量、db 密码、自定义 Header）Fernet 加密存储，密钥仅在本地 `.env`；
+- 管理 API 管理令牌鉴权；BI 只读令牌与写权限默认拒绝分离；
+- Webhook 强制 secret（恒定时间比较）；探针内置 SSRF 防线（DNS 预解析 + 内网段拒绝 + 白名单豁免，开关可控）；
+- 对外输出（日志、响应、样本、指标标签）统一脱敏。
 
-本版包含增量字段配置与整轮提交水位。已有数据目录升级前，停止所有服务并备份 `.env`、`data`，然后运行 `migrate.cmd`。新目录首次启动无需迁移。增量源要求非空数字/日期时间字段和源表主键；数据库目标要求主键 upsert。任务详情提供“增量进度”和“重试未完成批次”。完整说明见 `incremental-sync.md`。
+## 快速开始
 
-本包开箱提供本地同步执行（`sync`）和 Redis；RabbitMQ/Celery Worker 没有随启停脚本启动。
-任务请选择 `sync`。`async` 和触发异步分支的 `auto` 需要另行部署 RabbitMQ 与 Worker，建议在 Linux 上部署 Worker。
-自动 Cron 调度默认关闭；确认任务配置后，将 `.env` 的 `APIBRIDGE_SCHEDULER_ENABLED` 改为 `true` 再重启。
-现有同步/异步能力差异仍以项目实现为准，包不会自动调整业务任务模式或同步数据。
+### 方式一：Windows 便携包（推荐，开箱即用）
 
-## 内容与验证
+包内自带 Python 3.12 运行时、Redis、Oracle Instant Client 与已编译前端，无需安装环境：
 
-`app/` 为当前后端代码；`frontend-source/` 为前端源代码；`web/` 为编译产物；`skills/` 为探针 CLI 与 BI 配置说明。
-`requirements.lock` 固定本包的 Python 依赖版本；`MANIFEST.sha256` 记录发行文件的 SHA256。
-`VALIDATION.md` 记录打包验证结果和限制。`THIRD_PARTY.md` 提供第三方组件来源。`MERGE-REPORT.md` 记录与开发线合并的完整过程与差异。
-开发/验证资产：`tests/`（pytest，运行 `runtime\python.exe -m pytest tests/ -q`，无需环境变量）、`openspec/`（能力域规格基线）、`docs/`（设计与使用说明）、`scripts/`（冒烟与自审脚本）、`configs/`（Prometheus/Grafana 示例）。
-便携包面向单机内网使用；Redis Windows 移植项目定位为开发测试用途，正式高可用部署请使用 Linux 服务。
+```cmd
+:: 解压到可写的英文目录后
+start.cmd       rem 启动（后端 + Redis + 前端）
+status.cmd      rem 查看状态
+stop.cmd        rem 停止
+```
 
+打开 `http://127.0.0.1:3000`，把 `.env` 里 `APIBRIDGE_ADMIN_TOKEN=` 的值填到页面右上角「Token」即可。首次启动自动生成随机令牌、加密密钥与全新数据库；备份时同时保留 `.env`、`launcher.json` 与 `data\`。更多要点（VC++ 运行库、Oracle thick 模式、升级迁移、端口修改）见本文件末尾「便携包要点」。
 
-## 可选 BI 与监控增强（2026-09-28）
+### 方式二：源码运行
 
-本版增加指标计算、17 种图表、多看板、大屏投放与运行健康度。原同步和失败恢复流程保持现有实现。
+```bash
+pip install -r requirements.txt
+# 后端（SQLite 起步；BI 需要再开 APIBRIDGE_BI_ENABLED / APIBRIDGE_BI_AGGREGATION_ENABLED）
+uvicorn app.main:app --host 127.0.0.1 --port 8000
+# 前端（开发模式 3000 端口，代理到 8000）
+cd frontend-source && npm ci && npm run dev
+# 或构建生产前端（产物落 web/，由 server.py 一并托管）
+cd frontend-source && npm ci && npm run build
+```
 
-BI 与自动聚合默认关闭。已有数据目录先停止服务、备份并执行 migrate.cmd，再按 bi-merge-guide.md 开启；不要替换或恢复为开发机器的数据库。BI 不清理同步缓冲。关闭 BI 开关即可停用分析功能，保留已有同步数据。
+### 方式三：Docker
 
-## 从旧便携包升级
+`docker-compose.yml` 提供 app + PostgreSQL + Redis 编排（`APIBRIDGE_DATABASE_URL=postgresql+asyncpg://...`，时间列已做 asyncpg 兼容归一）。
 
-1. 等待同步结束，运行旧目录 stop.cmd。
-2. 备份旧目录 .env、launcher.json 和整个 data 文件夹。
-3. 新 ZIP 解压到另一个英文目录，将上述文件复制到新目录。
-4. 运行 migrate.cmd，成功后运行 start.cmd。
-5. 确认原连接、映射、任务和运行情况正常；保留升级前备份。需要 BI 时按 bi-merge-guide.md 启用。
+## 测试与质量
 
-不要用新生成的密钥覆盖旧 .env；否则已有凭据可能无法解密。
+```bash
+python -m pytest tests/ -q     # 1144 passed / 13 skipped；测试自足（临时 SQLite + 测试密钥）
+```
+
+- 五轮代码审查闭环（4 P0 + 23 P1 + 38 P2/P3，含对修复 diff 的复审），记录见 `MERGE-REPORT.md` §3.1–3.4；
+- PostgreSQL 部署级真机验证与明道云 API 参数矩阵实测，记录见 `VALIDATION.md`；
+- 验证语义诚实：测试不 mock 掉核心链路，`L2_partial_no_contract` 不算达标。
+
+## 文档索引
+
+| 文档 | 内容 |
+|------|------|
+| `AGENTS.md` | 工程须知：硬约束、环境陷阱清单（58 条）、代码地图、工作流 |
+| `docs/bi-dashboard-guide.md` | BI 大屏使用说明（启用、看板、投放、授权） |
+| `docs/trial-guide.md` | 试用阶段须知（当前阶段：**开发冻结、测试试用**） |
+| `incremental-sync.md` / `hap-bulk-upsert.md` / `manual-watermark.md` / `execution-log-rules.md` | 同步专项说明 |
+| `MERGE-REPORT.md` / `VALIDATION.md` | 合并与五轮审查记录 / 逐轮验证记录 |
+| `openspec/` | 13 个能力域的规格基线（改行为前先读对应 spec） |
+
+## 目录结构
+
+```
+app/            后端（FastAPI：api/adapters/connectors/probe/services/security/cache）
+frontend-source/  前端源码（React 19 + antd v5 + ECharts，构建产物落 web/）
+tests/          pytest 全量测试
+openspec/       能力域规格基线
+docs/           设计与使用说明
+scripts/        冒烟与运维脚本
+skills/         探针 CLI 与 BI 配置 skill
+web/            已编译前端（便携包内）
+runtime/ redis/ oracle/   便携包运行时（仅发行包携带）
+```
+
+## Windows 便携包要点
+
+- 解压到**可写英文目录**；无 VC++ 运行库先跑 `prerequisites\VC_redist.x64.exe`；
+- Oracle 默认 thick 模式兼容 11g（Instant Client 19 随包）；仅连 12.1+ 可改 `.env` 为 thin；
+- 探针访问内网目标需在 `.env` 的 `APIBRIDGE_PROBE_ALLOWED_HOSTS` 加白名单；
+- 升级旧目录：stop → 备份 `.env` / `launcher.json` / `data` → 拷入新包 → `migrate.cmd` → start；勿用新密钥覆盖旧 `.env`（已存凭据将无法解密）；
+- 端口冲突：改 `launcher.json`（改 Redis 端口需同步 `.env` 的 `APIBRIDGE_REDIS_URL`）；
+- 任务请用 `sync` 模式；`async` / 触发异步分支的 `auto` 需自行部署 RabbitMQ + Celery Worker；
+- 便携包面向单机内网；Redis Windows 移植定位开发测试，高可用请用 Linux Redis。
+
+## 当前阶段
+
+**开发冻结、测试试用中**（自 2026-10-01）：试用期问题统一记录、集中修复，详见 `docs/trial-guide.md`。
